@@ -2,13 +2,20 @@ import { PublicInstanceProxyHandlers } from "./componentPublicInstance"
 import { initProps } from "./componentProps"
 import { shallowReadonly } from "../reactivity/reactive"
 import { emit } from "./componentEmit"
+import { initSlots } from "./componentSlots"
+import { proxyRefs } from "../reactivity/ref"
 
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parent) {
   const component = {
     vnode,
     type: vnode.type,
     props: {}, 
     setupState: {},
+    slots: {},
+    provides: parent ? parent.provides : {},
+    parent,
+    isMounted: false,
+    subTree: {},
     emit: () => {}
   }
 
@@ -20,12 +27,14 @@ export function createComponentInstance(vnode) {
 export function setupComponent(instance) {
   // 创建虚拟节点时的props应该作为组件的setup函数参数传入
   //将props挂载到组件的setupState属性上，就可以用过代理获取值了
-  initProps(instance, instance.vnode.props) // 将props挂载到组件实例上
+  initProps(instance, instance.vnode.props) // 将虚拟节点的props挂载到组件实例上
+  initSlots(instance, instance.vnode.children)
   // 区别于函数组件的创建方法
   setupStatefulComponent(instance)
 }
 
 function setupStatefulComponent(instance) {
+  // Component是组件对象本身
   const Component = instance.type
 
   // 挂载代理对象
@@ -38,9 +47,11 @@ function setupStatefulComponent(instance) {
   const { setup } = Component
 
   if (setup) {
+    setCurrentInstance(instance) // 该变量在setup函数的闭包中
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit
     })
+    setCurrentInstance(null)
 
     handleSetupResult(instance, setupResult)
   }
@@ -48,16 +59,28 @@ function setupStatefulComponent(instance) {
 
 function handleSetupResult(instance, setupResult) {
   if (typeof setupResult === 'object') {
-    instance.setupState = setupResult
+    instance.setupState = proxyRefs(setupResult)
   }
 
   finishComponentSetup(instance)
 }
 
 function finishComponentSetup (instance) {
+  // type属性就是组件对象本身
   const Component = instance.type
 
   if (Component.render) {
     instance.render = Component.render
   }
+}
+
+let currentInstance = null
+
+// 只能在setup和生命周期函数中使用
+export function getCurrentInstance() {
+  return currentInstance
+}
+
+export function setCurrentInstance(instance) {
+  currentInstance = instance
 }

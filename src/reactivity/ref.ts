@@ -1,5 +1,5 @@
 import { trackEffects, triggerEffects, isTracking } from './effect'
-import { hasChanged, isObject } from '../shared'
+import { hasChanged, isObject } from '../shared/index'
 import { reactive } from './reactive'
 
 // proxy针对对象做代理，对于基础值来说应该用对象做响应式
@@ -63,14 +63,14 @@ export function proxyRefs(objectWithRefs) {
   return new Proxy(objectWithRefs, {
     get (target, key) {
       // 针对target[key]为object且有属性为ref时
-      let res = unRef(Reflect.get(target, key))
+      // let res = unRef(Reflect.get(target, key))
 
-      if (isObject(res)) {
-        return proxyRefs(res)
-      }
+      // if (isObject(res)) {
+      //   return proxyRefs(res)
+      // }
 
-      return res
-      // return unRef(Reflect.get(target, key))
+      // return res
+      return unRef(Reflect.get(target, key))
     },
     set (target, key, value) {
       if (isRef(target[key]) && !isRef(value)) {

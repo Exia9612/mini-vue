@@ -10,6 +10,8 @@ export function createVNode(type, props?, children?) {
     type,
     props,
     children,
+    component: null, // 虚拟节点属于的组件实例
+    key: props && props.key,
     shapeFlag: getShapeFlag(type),
     el: null // 该vnode对应的dom节点
   }

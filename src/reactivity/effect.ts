@@ -1,4 +1,4 @@
-import { extend } from "../shared"
+import { extend } from "../shared/index"
 
 let activeEffect // 当前正在被触发的响应式逻辑
 let shouldTrack // 是否收集依赖

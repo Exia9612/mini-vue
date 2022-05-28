@@ -6,12 +6,12 @@ function createElement(type) {
   return document.createElement(type)
 }
 
+// 更新dom元素的属性(标签的属性)
 function patchProp(el, key, prevVal, nextVal) {
   if (isOn(key)) {
     const event = key.slice(2).toLowerCase()
     el.addEventListener(event, nextVal)
   } else {
-    console.log('nextval is undefined')
     if (nextVal === undefined || nextVal === null) {
       el.removeAttribute(key)
     } else {
@@ -20,8 +20,12 @@ function patchProp(el, key, prevVal, nextVal) {
   }
 }
 
-function insert(el, parent) {
-  parent.append(el)
+// function insert(child, parent, anchor) {
+//   parent.insertBefore(child, anchor || null);
+// }
+
+function insert(el, parent, anchor) {
+  parent.insertBefore(el, anchor || null)
 }
 
 function remove(child) {

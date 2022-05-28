@@ -15,6 +15,7 @@ export function createComponentInstance(vnode, parent) {
     provides: parent ? parent.provides : {},
     parent,
     isMounted: false,
+    next: null, // 组件实例更新时的新的虚拟节点
     subTree: {},
     emit: () => {}
   }
@@ -26,8 +27,9 @@ export function createComponentInstance(vnode, parent) {
 
 export function setupComponent(instance) {
   // 创建虚拟节点时的props应该作为组件的setup函数参数传入
-  //将props挂载到组件的setupState属性上，就可以用过代理获取值了
+  // 将props挂载到组件的setupState属性上，就可以用过代理获取值了
   initProps(instance, instance.vnode.props) // 将虚拟节点的props挂载到组件实例上
+  // 在组件实例的slots上根据对应的vnode的children添加键名相同的对象
   initSlots(instance, instance.vnode.children)
   // 区别于函数组件的创建方法
   setupStatefulComponent(instance)
@@ -47,7 +49,8 @@ function setupStatefulComponent(instance) {
   const { setup } = Component
 
   if (setup) {
-    setCurrentInstance(instance) // 该变量在setup函数的闭包中
+    // 该变量在setup函数的闭包中，该闭包保存了currentInstance
+    setCurrentInstance(instance)
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit
     })

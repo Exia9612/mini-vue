@@ -11,10 +11,12 @@ export function initSlots(instance, children) {
 function normalizeObjectSlots(children, slots) {
   for (const key in children) {
     const value = children[key]
+    // value(props)返回虚拟节点  
     slots[key] = (props) => normalizeSlotValue(value(props))
   }
 }
 
+// 透传数组
 function normalizeSlotValue(value) {
   return Array.isArray(value) ? value : [value]
 }

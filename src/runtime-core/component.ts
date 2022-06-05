@@ -72,9 +72,14 @@ function finishComponentSetup (instance) {
   // type属性就是组件对象本身
   const Component = instance.type
 
-  if (Component.render) {
-    instance.render = Component.render
+  if (compiler && !Component.render) {
+    // 用户自定义的render函数优先级最高
+    if (Component.template) {
+      Component.render = compiler(Component.template)
+    }
   }
+
+  instance.render = Component.render
 }
 
 let currentInstance = null
@@ -86,4 +91,10 @@ export function getCurrentInstance() {
 
 export function setCurrentInstance(instance) {
   currentInstance = instance
+}
+
+let compiler
+
+export function registerRunTimeCompiler(_compiler) {
+  compiler = _compiler
 }

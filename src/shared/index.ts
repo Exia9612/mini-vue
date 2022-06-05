@@ -1,3 +1,5 @@
+export * from './toDisplayString'
+
 export const extend = Object.assign
 
 export const isObject = (val) => {
@@ -10,6 +12,10 @@ export const hasChanged = (value1, value2) => {
 
 export const isOn = (key: string) => {
   return /^on[A-Z]/.test(key)
+}
+
+export const isString = (value) => {
+  return typeof value === 'string'
 }
 
 export const hasOwnProperty = (obj, key) => {

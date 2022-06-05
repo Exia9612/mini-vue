@@ -87,7 +87,7 @@ export function createRenderer (options) {
         hostSetElementText(container, nextChildren)
       }
     } else {
-      // 更新的节点是一个数组
+      // 选虚拟节点children为数组，新的是文本
       if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
         hostSetElementText(container, "")
         mountChildren(nextChildren, container, parentComponent, anchor)
@@ -98,6 +98,7 @@ export function createRenderer (options) {
     }
   }
 
+  // diff
   function patchKeyedChildren(prevChildren, nextChildren, container, parentComponent, parentAnchor) {
     // 1 双端对比确定中间不同的节点的范围
     let start = 0 // i
@@ -116,6 +117,7 @@ export function createRenderer (options) {
       const vnodeInNext = nextChildren[start]
 
       if (isSameVnode(vnodeInPrev, vnodeInNext)) {
+        // 相同节点复用老节点，复用节点的渲染效率更高
         patch(vnodeInPrev, vnodeInNext, container, parentComponent, parentAnchor)
       } else {
         break
@@ -149,6 +151,7 @@ export function createRenderer (options) {
         }
       }
     } else if (start > e2) {
+      // 新节点比老节点少，删除老节点
       while (start <= e1) {
         hostRemove(prevChildren[start].el)
         start++
@@ -161,16 +164,18 @@ export function createRenderer (options) {
       const toBePatched = e2 - s2 + 1 // 新节点的数量
       let patched = 0 // 已经处理好的新节点数量
       const keyToNewIndexMap = new Map()
-      const newIndexToOldIndexMap = new Array(toBePatched) // 老元素的映射表
+      // 相同的节点在新节点中的位置映射老节点中的位置
+      const newIndexToOldIndexMap = new Array(toBePatched)
       let moved = false // 新老节点中的元素是否改变了顺序
       let maxNewIndexSoFar = 0
 
+      // 初始化newIndexToOldIndexMap，全部元素为0
       for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0
       //newIndexToOldIndexMap.forEach(item => item = 0)
 
       for (let i = s2; i <= e2; i++) {
         const nextChild = nextChildren[i]
-        // 新的虚拟节点的key作为索引
+        // 新的虚拟节点的key属性作为索引
         keyToNewIndexMap.set(nextChild.key, i)
       }
 
@@ -184,7 +189,7 @@ export function createRenderer (options) {
           continue
         }
 
-        let newIndex
+        let newIndex // newVnode在nextChildren中的索引
         if (prevChild.key != null) {
           // null undefined
           newIndex = keyToNewIndexMap.get(prevChild.key)
@@ -203,10 +208,11 @@ export function createRenderer (options) {
           hostRemove(prevChild.el)
         } else {
           // 老节点还存在
-
           if (newIndex >= maxNewIndexSoFar) {
+            // 相同的节点在新老家节点中的位置未改变
             maxNewIndexSoFar = newIndex
           } else {
+            // 相同的节点在新老家节点中的位置改变了
             moved = true
           }
 
@@ -216,7 +222,7 @@ export function createRenderer (options) {
           newIndexToOldIndexMap[newIndex - s2] = i + 1 
           // 深度对比新老节点的子节点
           patch(prevChild, nextChildren[newIndex], container, parentComponent, null)
-          patched++
+          patched++ // 相同节点在新节点中存在才会加一
         }
       }
 
@@ -227,7 +233,7 @@ export function createRenderer (options) {
 
       for (let i = toBePatched - 1; i >= 0; i--) {
         // 因为用insertBefroe插入节点，所以需要倒叙
-        const nextIndex = i + s2 // 因为i取自toBepatched的长度，需要补全新节点数组前面不变的的昌都
+        const nextIndex = i + s2 // 因为i取自toBepatched的长度，需要补全新节点数组前面不变的的长度
         const nextChild = nextChildren[nextIndex]
         const anchor = nextIndex + 1 < l2 ? nextChildren[nextIndex + 1].el : null
       
@@ -340,7 +346,7 @@ export function createRenderer (options) {
         // 组件实例调用组件对象的render函数(App.js)
         // 绑定代理对象后render可以获取到在组件上挂载(setupComponent的工作)的各项属性
         // 相当于在template上使用data中的变量， instance.render.call(proxy)返回的等于该组件的template标签中的内容
-        instance.subTree = instance.render.call(proxy) // 虚拟节点
+        instance.subTree = instance.render.call(proxy, proxy) // 虚拟节点
         const subTree = instance.subTree
 
         patch(null, subTree, container, instance, anchor)
@@ -361,7 +367,7 @@ export function createRenderer (options) {
           proxy,
           subTree: prevSubTree
         } = instance
-        instance.subTree = instance.render.call(proxy)
+        instance.subTree = instance.render.call(proxy, proxy)
         const subTree = instance.subTree
 
         patch(prevSubTree, subTree, container, instance, anchor)

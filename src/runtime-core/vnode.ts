@@ -3,6 +3,8 @@ import { ShapeFlags } from "../shared/ShapeFlags"
 export const Fragment = Symbol("Fragment")
 export const Text = Symbol("Text")
 
+export { createVNode as createElementVNode }
+
 export function createVNode(type, props?, children?) {
   // type 可能是一个对象，也是一个组件
   // 可能由h函数调用该函数，type就是字符串，根据type, props, children生成真实节点
